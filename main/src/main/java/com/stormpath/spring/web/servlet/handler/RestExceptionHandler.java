@@ -107,6 +107,8 @@ import java.util.List;
  * @see org.springframework.http.converter.json.MappingJacksonHttpMessageConverter MappingJacksonHttpMessageConverter
  *
  * @author Les Hazlewood
+ *
+ * InitializingBean Bean 初始化方式
  */
 public class RestExceptionHandler extends AbstractHandlerExceptionResolver implements InitializingBean {
 
@@ -166,6 +168,7 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
         this.allMessageConverters = converters;
     }
 
+    //利用 spring 自身的'设置' 行为, 增加一些基础的 MessageConverter 到 converters
     //leverage Spring's existing default setup behavior:
     private static final class HttpMessageConverterHelper extends WebMvcConfigurationSupport {
         public void addDefaults(List<HttpMessageConverter<?>> converters) {
@@ -189,14 +192,17 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
      * @return a corresponding ModelAndView to forward to, or <code>null</code> for default processing
      */
     @Override
-    protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response,
+                                              Object handler, Exception ex) {
 
         ServletWebRequest webRequest = new ServletWebRequest(request, response);
 
         RestErrorResolver resolver = getErrorResolver();
 
+        //将异常转换成  RestError
         RestError error = resolver.resolveError(webRequest, handler, ex);
         if (error == null) {
+            //表示该 Handler 不会处理当前抛出的异常
             return null;
         }
 
@@ -211,14 +217,17 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
         return mav;
     }
 
-    protected ModelAndView getModelAndView(ServletWebRequest webRequest, Object handler, RestError error) throws Exception {
+    protected ModelAndView getModelAndView(ServletWebRequest webRequest, Object handler,
+                                           RestError error) throws Exception {
 
         applyStatusIfPossible(webRequest, error);
 
         Object body = error; //default the error instance in case they don't configure an error converter
 
         RestErrorConverter converter = getErrorConverter();
+
         if (converter != null) {
+            //将 RestError 转换成指定的 body(一般都是 map)
             body = converter.convert(error);
         }
 
@@ -232,6 +241,20 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
         //TODO support response.sendError ?
     }
 
+    /*
+     * 处理 response
+     * 1) 获得请求所接受的返回内容之媒体类型  Accept
+     * 2) 利用该 Handler 指定的 MessageConverter
+     * 3) 循环没一个 MessageConverter 看是否能处理该请求，判断标准 messageConverter.canWrite() 返回true
+     * 4) messageConverter.canWrite()
+     *    1) request accept 之 MediaType 为空或者 All 返回true
+     *    2) 循环判断 messageConverter 的 supportMediaTypes 是否兼容 accept MediaType
+     *       1) 先判断 2 个 MediaType 是否的 type是否为通配符 (*), 是则返回 true
+     *       2) 否则就要继续判断了  逻辑见 MediaType.isCompatibleWith(MediaType other)
+     *
+     *  只有 MessageConverter 所支持的 MediaType 能够兼容 Request-Accept-MediaType，该MessageConverter 才能处理该请求
+     *  才能将 body 写入到 response
+     */
     @SuppressWarnings("unchecked")
     private ModelAndView handleResponseBody(Object body, ServletWebRequest webRequest) throws ServletException, IOException {
 
@@ -242,6 +265,7 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
             acceptedMediaTypes = Collections.singletonList(MediaType.ALL);
         }
 
+        //Accept MediaType 按照质量因子(q)排序
         MediaType.sortByQualityValue(acceptedMediaTypes);
 
         HttpOutputMessage outputMessage = new ServletServerHttpResponse(webRequest.getResponse());
@@ -255,8 +279,10 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
                 for (HttpMessageConverter messageConverter : converters) {
                     if (messageConverter.canWrite(bodyType, acceptedMediaType)) {
                         messageConverter.write(body, acceptedMediaType, outputMessage);
+
                         //return empty model and view to short circuit the iteration and to let
                         //Spring know that we've rendered the view ourselves:
+                        //如果想返回一个统一处理的错误页面, 该如何操作呢
                         return new ModelAndView();
                     }
                 }
@@ -267,6 +293,7 @@ public class RestExceptionHandler extends AbstractHandlerExceptionResolver imple
             logger.warn("Could not find HttpMessageConverter that supports return type [" + bodyType +
                     "] and " + acceptedMediaTypes);
         }
+
         return null;
     }
 }

@@ -26,39 +26,6 @@ import java.util.Map;
  * converter) can easily automatically convert Maps to response bodies.  The map is populated with the following
  * default name/value pairs:
  *
- * <table>
- *     <tr>
- *         <th>Key (a String)</th>
- *         <th>Value (an Object)</th>
- *         <th>Notes</th>
- *     </tr>
- *     <tr>
- *         <td>status</td>
- *         <td>restError.{@link RestError#getStatus() getStatus()}.{@link org.springframework.http.HttpStatus#value() value()}</td>
- *         <td></td>
- *     </tr>
- *     <tr>
- *         <td>code</td>
- *         <td>restError.{@link RestError#getCode() getCode()}</td>
- *         <td>Only set if {@code code > 0}</td>
- *     </tr>
- *     <tr>
- *         <td>message</td>
- *         <td>restError.{@link RestError#getMessage() getMessage()}</td>
- *         <td>Only set if {@code message != null}</td>
- *     </tr>
- *     <tr>
- *         <td>developerMessage</td>
- *         <td>restError.{@link RestError#getDeveloperMessage() getDeveloperMessage()}</td>
- *         <td>Only set if {@code developerMessage != null}</td>
- *     </tr>
- *     <tr>
- *         <td>moreInfo</td>
- *         <td>restError.{@link RestError#getMoreInfoUrl() getMoreInfoUrl()}</td>
- *         <td>Only set if {@code moreInfoUrl != null}</td>
- *     </tr>
- * </table>
- * <p/>
  * The map key names are customizable via setter methods (setStatusKey, setMessageKey, etc).
  *
  * @author Les Hazlewood

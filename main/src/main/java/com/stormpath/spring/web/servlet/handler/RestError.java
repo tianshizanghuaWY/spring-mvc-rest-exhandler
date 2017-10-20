@@ -30,7 +30,8 @@ public class RestError {
     private final String moreInfoUrl;
     private final Throwable throwable;
 
-    public RestError(HttpStatus status, int code, String message, String developerMessage, String moreInfoUrl, Throwable throwable) {
+    public RestError(HttpStatus status, int code, String message, String developerMessage,
+                     String moreInfoUrl, Throwable throwable) {
         if (status == null) {
             throw new NullPointerException("HttpStatus argument cannot be null.");
         }
@@ -121,11 +122,6 @@ public class RestError {
             return this;
         }
 
-        public Builder setCode(int code) {
-            this.code = code;
-            return this;
-        }
-
         public Builder setMessage(String message) {
             this.message = message;
             return this;
@@ -138,6 +134,11 @@ public class RestError {
 
         public Builder setMoreInfoUrl(String moreInfoUrl) {
             this.moreInfoUrl = moreInfoUrl;
+            return this;
+        }
+
+        public Builder setCode(int code) {
+            this.code = code;
             return this;
         }
 

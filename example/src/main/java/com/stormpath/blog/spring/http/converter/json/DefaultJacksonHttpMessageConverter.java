@@ -28,6 +28,8 @@ import java.nio.charset.Charset;
  *     (not yet released at the time of writing).
  *
  * @author Les Hazlewood
+ *
+ * 构造方法指定 该MessageCoverter 的 supportedMediaTypes 为 application/json
  */
 public class DefaultJacksonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
 
@@ -52,6 +54,8 @@ public class DefaultJacksonHttpMessageConverter extends AbstractHttpMessageConve
 
     @Override
     public boolean canWrite(Class<?> clazz, MediaType mediaType) {
+        System.out.println(mediaType.toString());
+
         return objectMapper.canSerialize(clazz) && canWrite(mediaType);
     }
 

@@ -39,6 +39,7 @@ import java.util.*;
  * Default {@code RestErrorResolver} implementation that converts discovered Exceptions to
  * {@link RestError} instances.
  *
+ * 将异常转换成  RestError
  * @author Les Hazlewood
  */
 public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourceAware, InitializingBean {
@@ -88,6 +89,12 @@ public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourc
         this.defaultDeveloperMessage = defaultDeveloperMessage;
     }
 
+    /*
+     * bean 初始化(IoC)后, 调用该方法来初始化额外的初始化信息
+     * 【答疑】为什么不在配置文件里直接配置这些额外的初始化信息呢：
+     *  可能的答案
+     *  1) 本例里需要使用一些 default 配置, 这些配置量比较大, 不方便在xml里配置
+     */
     @Override
     public void afterPropertiesSet() throws Exception {
 
@@ -95,6 +102,7 @@ public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourc
         Map<String, String> definitions = createDefaultExceptionMappingDefinitions();
 
         //add in user-specified mappings (will override defaults as necessary):
+        //添加指定的 exception mappings, 会覆盖默认的
         if (this.exceptionMappingDefinitions != null && !this.exceptionMappingDefinitions.isEmpty()) {
             definitions.putAll(this.exceptionMappingDefinitions);
         }
@@ -144,6 +152,9 @@ public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourc
         return status.value() + ", " + DEFAULT_EXCEPTION_MESSAGE_VALUE;
     }
 
+    /*
+     * 将Exception 转换成 RestError 用于 response body
+     */
     @Override
     public RestError resolveError(ServletWebRequest request, Object handler, Exception ex) {
 
@@ -218,9 +229,11 @@ public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourc
             if (msg.equalsIgnoreCase("null") || msg.equalsIgnoreCase("off")) {
                 return null;
             }
+            //在 rest-servlet.xml 里配置了是否使用 Exception 的 message 作为 response message
             if (msg.equalsIgnoreCase(DEFAULT_EXCEPTION_MESSAGE_VALUE)) {
                 msg = ex.getMessage();
             }
+            //国际化?
             if (messageSource != null) {
                 Locale locale = null;
                 if (localeResolver != null) {
@@ -249,6 +262,9 @@ public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourc
         RestError template = null;
         String dominantMapping = null;
         int deepest = Integer.MAX_VALUE;
+
+        //寻找最合适的 ex-template, depth 越小，越匹配
+        //注意在 if 分支里没有break， 因为需要在整个配置里寻找最合适的 template
         for (Map.Entry<String, RestError> entry : mappings.entrySet()) {
             String key = entry.getKey();
             int depth = getDepth(key, ex);
@@ -258,10 +274,12 @@ public class DefaultRestErrorResolver implements RestErrorResolver, MessageSourc
                 template = entry.getValue();
             }
         }
+
         if (template != null && log.isDebugEnabled()) {
             log.debug("Resolving to RestError template '" + template + "' for exception of type [" + ex.getClass().getName() +
                     "], based on exception mapping [" + dominantMapping + "]");
         }
+
         return template;
     }
 
