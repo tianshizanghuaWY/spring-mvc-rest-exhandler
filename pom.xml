@@ -31,7 +31,7 @@
         <slf4j.version>1.6.1</slf4j.version>
         <jackson.version>1.7.6</jackson.version>
         <jetty.version>6.1.24</jetty.version>
-        <jdk.version>1.6</jdk.version>
+        <jdk.version>1.8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -41,7 +41,6 @@
     </modules>
 
     <dependencyManagement>
-
         <dependencies>
             <dependency>
                 <groupId>com.stormpath.blog</groupId>
