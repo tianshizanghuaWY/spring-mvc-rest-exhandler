@@ -54,7 +54,8 @@ public class DefaultJacksonHttpMessageConverter extends AbstractHttpMessageConve
 
     @Override
     public boolean canWrite(Class<?> clazz, MediaType mediaType) {
-        System.out.println(mediaType.toString());
+        //坑
+        System.out.println(mediaType == null ? "" : mediaType.toString());
 
         return objectMapper.canSerialize(clazz) && canWrite(mediaType);
     }
